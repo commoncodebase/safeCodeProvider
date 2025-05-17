@@ -322,40 +322,43 @@ def submits_page(request):
 def bring_code(request):
     try:
         body = json.loads(request.body)
-
         student_id = body.get("student_id")
         student_name = body.get('student_name').lower()
 
-        with open(CONFIG_FILE, "r", encoding="utf-8") as file:
-            config = json.load(file)
-
-        file_name = config.get("file_name", "script").lower()
-        exam_type = config.get("type", "py").lower()
-        file_name += f".{exam_type}"
-
         folder_name = f"{student_id}_{student_name}"
-        student_folder = os.path.join(UPLOADS_DIR, folder_name) #uploads/studentID_studentName
+        student_folder = os.path.join(UPLOADS_DIR, folder_name)  # uploads/123_john
 
         if not os.path.exists(student_folder):
-            return JsonResponse({'status': 'error', 'message': 'Student folder not found'})
-        
-        # Create student's code file path
-        code_file_path = os.path.join(student_folder, file_name)
+            return JsonResponse({'success': False, 'message': 'Student folder not found'})
 
-        if not os.path.exists(code_file_path):
-            return JsonResponse({'status': 'error', 'message': 'Code file not found'})
-        
-        with open(code_file_path, "r", encoding="utf-8") as file:
-            code_content = file.read()
+        files_data = []
+
+        for filename in os.listdir(student_folder):
+            file_path = os.path.join(student_folder, filename)
+            if os.path.isfile(file_path):
+                with open(file_path, "r", encoding="utf-8") as file:
+                    content = file.read()
+                extension = filename.split('.')[-1].lower()
+
+                files_data.append({
+                    "filename": filename,
+                    "content": content,
+                    "extension": extension
+                })
+
+        if not files_data:
+            return JsonResponse({'success': False, 'message': 'No code files found in the folder'})
 
         return JsonResponse({
             "success": True,
-            "content": code_content,
-            "exam_type": exam_type
+            "files": files_data
         })
+
     except Exception as e:
-        return JsonResponse({"error": f" An error occurred while returning the code: {str(e)}"})
-    
+        return JsonResponse({
+            "success": False,
+            "message": f"An error occurred while reading files: {str(e)}"
+        })
 
 @csrf_exempt
 def open_student_port(request):
