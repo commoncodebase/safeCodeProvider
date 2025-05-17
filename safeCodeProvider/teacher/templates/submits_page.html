@@ -1,50 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Submits Page</title>
     <style>
+        * {
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
 
-*{
-    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    margin:0;
-    padding:0;
-    box-sizing: border-box;
+        }
 
-  }
-  body {
-    background-color: #f3f3f3; /* Galaxy blue */
-    color: white;
-    justify-content: center;
-    align-items: center;
+        body {
+            background-color: #f3f3f3;
+            /* Galaxy blue */
+            color: white;
+            justify-content: center;
+            align-items: center;
 
-}
-        .navbar{
-    background-color: #181d24;
-    color: #fff;
-    height: 70px;
-    text-align: center;
-    align-content: center;
-}
+        }
+
+        .navbar {
+            background-color: #181d24;
+            color: #fff;
+            height: 70px;
+            text-align: center;
+            align-content: center;
+        }
+
         .container {
             display: flex;
             justify-content: space-between;
         }
+
         .left-container {
             width: 40%;
         }
+
         .right-container {
             width: 55%;
             text-align: center;
         }
-        
+
         .student-container {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
+
         .student-card {
             background-color: #181d24;
             padding: 10px;
@@ -54,6 +61,7 @@
             width: 80%;
             transition: background 0.3s;
         }
+
         .student-card a {
             text-decoration: none;
             color: #fff;
@@ -61,42 +69,49 @@
             width: 100%;
             padding: 10px;
         }
+
         .student-card:hover a {
             color: #ff4d00;
             transition: 0.5s ease;
         }
+
         footer {
-    background-color: #181d24;
-    color: white;
-    text-align: center;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-#ssbuttons {
-    display: flex; 
-    flex-direction: row; 
-    gap: 30px; 
-    justify-content: center; 
-    margin-top: 30px;
-}
-#ssbuttons button {
-    background-color:#ff4d00 ;
-    font-size: 16px;
-    color: #181d24;
-    font-weight: 700;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.3s;
-}
-#monaco-editor .view-lines {
-    text-align: left !important; /* Metni sola yasla */
-}
+            background-color: #181d24;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #ssbuttons {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        #ssbuttons button {
+            background-color: #ff4d00;
+            font-size: 16px;
+            color: #181d24;
+            font-weight: 700;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        #monaco-editor .view-lines {
+            text-align: left !important;
+            /* Metni sola yasla */
+        }
     </style>
 </head>
+
 <body>
     <div class="navbar">
         <h2 style="text-align: center; font-family: Unbounded, serif;">Safe Code Provider | Submits Panel</h2>
@@ -104,72 +119,127 @@
 
     </div>
 
-    <h2 style="color: #181d24 ;text-align: center; margin-top: 20px;">You can share this url with your students. They will see the exam page at this url after you click "Start Exam" button.:</h2>
+    <h2 style="color: #181d24 ;text-align: center; margin-top: 20px;">You can share this url with your students. They
+        will see the exam page at this url after you click "Start Exam" button.:</h2>
     <h2 style="color: #ff4d00;text-align: center;">http://127.0.0.1:8001/</h2>
     <div id="ssbuttons">
         <button id="openPortButton">Enable Exam</button>
         <button id="closePortButton">Disable Exam</button>
     </div>
+    <div id="tabs"
+        style="display: flex; justify-content: flex-end; gap: 10px; padding: 10px;"></div>
 
-
-<div class="container" style="color: #181d24; margin-bottom: 50px;" >
-    <div class="left-container">
-        <h2 style="text-align: center; margin-top: 20px;">Student List</h2>
-        <div class="student-container">
-            {% for student in students %}
+    <div class="container" style="color: #181d24; margin-bottom: 50px;">
+        <div class="left-container">
+            <h2 style="text-align: center; margin-top: 20px;">Student List</h2>
+            <div class="student-container">
+                {% for student in students %}
                 <div class="student-card">
                     <a href="javascript:void(0);" onclick="bringCode('{{ student.id }}', '{{ student.name }}')">
                         <strong>ID:</strong> {{ student.id }} - <strong>Name:</strong> {{ student.name }}
                     </a>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+
+        <div class="right-container" style="margin-right: 60px;">
+            <h2 style="margin-top: 20px;">Exam Password: {{ exam_password }}</h1>
+                <div class="editor" id="editor-container" style="height: 700px">
+                    <!-- conatiner for Monaco -->
+                    <div id="monaco-editor" style="width: 100%; height: 100%;"></div>
+                </div>
         </div>
     </div>
-
-
-    <div class="right-container" style="margin-right: 60px;">
-        <h2 style="margin-top: 20px;">Exam Password: {{ exam_password }}</h1>
-            <div class="editor" id="editor-container" style= "height: 700px">
-                <!-- conatiner for Monaco -->
-                <div id="monaco-editor" style="width: 100%; height: 100%;"></div>
-            </div>
-    </div>
-</div>
-<footer >
-    <p style="font-family: Unbounded, serif; ">CodeCommonBase</p>
-</footer>
+    <footer>
+        <p style="font-family: Unbounded, serif; ">CodeCommonBase</p>
+    </footer>
 </body>
-  <!-- Monaco Editor CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.js"></script>
-  <script>
-      require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' }});
+<!-- Monaco Editor CDN -->
 
-      var editor;
+<div id="monaco-editor" style="height: 600px; border: 1px solid #ccc;"></div>
 
-      require(['vs/editor/editor.main'], function() { // determine the language using the exam_type value
-          var langMap = {
-              'py': 'python',
-              'java': 'java',
-              'c': 'c'
-          };
-          var editorLanguage = langMap['{{ exam_type }}'] || 'plaintext';
-  
-          editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-              value: `{{ assignment_content|escapejs }}`,
-              language: editorLanguage,
-              theme: "vs-dark",
-              fontSize: 18
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.js"></script>
+<script>
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' } });
+    var editor;
+    var models = {}; // Dosya ismine göre model listesi
 
-          });
+    require(['vs/editor/editor.main'], function () {
+        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+            value: '',
+            language: 'plaintext',
+            theme: 'vs-dark',
+            fontSize: 18
+        });
+    });
 
-          var editorContainer = document.getElementById('editor-container');
-          
-      });
+    function openMultiFileEditor(files) {
+        // Sekmeleri temizle
+        const tabsContainer = document.getElementById("tabs");
+        tabsContainer.innerHTML = "";
+        models = {}; // eski modelleri sıfırla
 
-      function bringCode(studentId, studentName) {
+        files.forEach((file, index) => {
+            const langMap = {
+                'py': 'python',
+                'java': 'java',
+                'c': 'c'
+            };
+            const language = langMap[file.extension] || 'plaintext';
+
+            // Monaco Model oluştur
+            const model = monaco.editor.createModel(file.content, language);
+            models[file.filename] = model;
+
+            // Sekme oluştur
+            const tab = document.createElement("button");
+            tab.innerText = file.filename;
+            tab.style.marginRight = "10px";
+            tab.style.cursor = "pointer";
+            tab.style.padding = "8px 16px";
+            tab.style.backgroundColor = "#2e3440"; // örnek koyu arka plan
+            tab.style.color = "#ffffff"; // yazı rengi
+            tab.style.border = "none";
+            tab.style.borderRadius = "8px";
+            tab.style.fontSize = "14px";
+            tab.style.fontFamily = "monospace";
+            tab.style.transition = "background-color 0.2s ease";
+            tab.onmouseover = () => {
+                tab.style.backgroundColor = "#4c566a";
+            };
+            tab.onmouseout = () => {
+                tab.style.backgroundColor = "#2e3440";
+            };
+
+            tab.onclick = () => {
+                editor.setModel(model);
+
+                // aktif sekme stili (isteğe bağlı)
+                document.querySelectorAll('#tabs button').forEach(btn => {
+                    btn.style.backgroundColor = "#2e3440";
+                });
+                tab.style.backgroundColor = "#5eead4";  // seçili sekme rengi
+                tab.style.color = "#000000";           // seçili sekme yazı rengi
+            };
+
+            tabsContainer.appendChild(tab);
+
+
+            // İlk dosyayı otomatik aç
+            if (index === 0) {
+                editor.setModel(model);
+            }
+        });
+    }
+</script>
+
+<script>
+    function bringCode(studentId, studentName) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        fetch("/bring_code/",{
+        fetch("/bring_code/", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -177,33 +247,24 @@
             },
             body: JSON.stringify({
                 student_id: studentId,
-                student_name: studentName})
+                student_name: studentName
+            })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                var langMap = {
-                    'py': 'python',
-                    'java': 'java',
-                    'c': 'c'
-                };
-                var editorLanguage = langMap[data.exam_type] || 'plaintext';
-
-                // Monaco Editor içeriğini güncelle
-                if (editor) {
-                    editor.setValue(data.content);
-                    monaco.editor.setModelLanguage(editor.getModel(), editorLanguage);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    openMultiFileEditor(data.files);
+                } else {
+                    alert("Dosyalar bulunamadı!");
                 }
-            } else {
-                alert("File not found or read!");
-            }
-        })
-        .catch(error => console.error("Error fetching student code:", error));
+            })
+            .catch(error => console.error("Kod dosyaları alınamadı:", error));
     }
 
-    </script>  
 
-    <script>
+</script>
+
+<script>
     //helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
@@ -220,59 +281,60 @@
         return cookieValue;
     }
 
-        document.getElementById("openPortButton").addEventListener("click", function() {
-    fetch("/open_port/", {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": getCookie("csrftoken"),
-            "Content-Type": "application/json"
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.exam_time) {
-            startCountdown(data.exam_time); 
-        } else {
-            alert(data.message || data.error);
-        }
-    })
-    .catch(error => console.error("Error:", error));
-});
-
-function startCountdown(minutes) {
-    let totalSeconds = minutes * 60; 
-
-    function updateTimer() {
-        let minutesLeft = Math.floor(totalSeconds / 60);
-        let secondsLeft = totalSeconds % 60;
-        document.getElementById("timer").textContent = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
-
-        if (totalSeconds > 0) {
-            totalSeconds--;
-            setTimeout(updateTimer, 1000);
-        } else {
-            document.getElementById("timer").textContent = "Time is over!";
-        }
-    }
-
-    updateTimer();
-}
-    </script>
-
-    <script>
-        document.getElementById("closePortButton").addEventListener("click", function() {
-            fetch("/close_port/", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCookie("csrftoken"),
-                    "Content-Type": "application/json"
+    document.getElementById("openPortButton").addEventListener("click", function () {
+        fetch("/open_port/", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Content-Type": "application/json"
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exam_time) {
+                    startCountdown(data.exam_time);
+                } else {
+                    alert(data.message || data.error);
                 }
             })
+            .catch(error => console.error("Error:", error));
+    });
+
+    function startCountdown(minutes) {
+        let totalSeconds = minutes * 60;
+
+        function updateTimer() {
+            let minutesLeft = Math.floor(totalSeconds / 60);
+            let secondsLeft = totalSeconds % 60;
+            document.getElementById("timer").textContent = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+
+            if (totalSeconds > 0) {
+                totalSeconds--;
+                setTimeout(updateTimer, 1000);
+            } else {
+                document.getElementById("timer").textContent = "Time is over!";
+            }
+        }
+
+        updateTimer();
+    }
+</script>
+
+<script>
+    document.getElementById("closePortButton").addEventListener("click", function () {
+        fetch("/close_port/", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Content-Type": "application/json"
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 alert(data.message || data.error);
             })
             .catch(error => console.error("Error:", error));
-        });
-        </script>
+    });
+</script>
+
 </html>
