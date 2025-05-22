@@ -131,41 +131,23 @@ def exam_page(request):
 
 def save_code(request):
     try:
-        # Get the JSON data
         body = json.loads(request.body)
-
-        # Get the information using the JSON data
         student_id = body.get('student_id')
         student_name = body.get('student_name').lower()
-        code = body.get('code')
+        files = body.get('files', {})
 
-        # Open the configuration file
-        config_path = "config.json"
-        with open(config_path, "r", encoding="utf-8") as file:
-            config = json.load(file)
-
-        file_name = config.get("file_name", "script").lower()
-        exam_type = config.get("type", "py").lower()
-        file_name += f".{exam_type}"
-
-        # Path to the student's file
         folder_name = f"{student_id}_{student_name}"
-        print("folder_name:", folder_name)
-        student_folder = os.path.join(UPLOADS_DIR, folder_name)#uploads/220717005_emre
-        print("student_folder:", student_folder)
+        student_folder = os.path.join(UPLOADS_DIR, folder_name)
 
         if not os.path.exists(student_folder):
             return JsonResponse({'status': 'error', 'message': 'Student folder not found'})
-        
-        # Öğrencinin kod dosyası yolunu oluştur
-        code_file_path = os.path.join(student_folder, file_name)#uploads/220717005_emre/main.py
-        print("code_file_path:", code_file_path)
 
-        # Kod dosyasını yaz
-        with open(code_file_path, "w") as f:
-            f.write(code)
-        
-        return JsonResponse({'status': 'success', "message": "Code saved successfully!"})
+        for file_name, code in files.items():
+            file_path = os.path.join(student_folder, file_name)
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(code)
+
+        return JsonResponse({'status': 'success', 'message': 'All files saved'})
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
@@ -179,70 +161,62 @@ def run_code(request):
         if not student_id or not student_name:
             return JsonResponse({"status": "error", "message": "Incomplete information was sent."})
 
-        container_name = f"{student_id}-{student_name.lower()}-container" #220717005-emre-container
-        image_name = f"{student_id}-{student_name.lower()}" #220717005-emre
+        student_name = student_name.strip().lower()
+        container_name = f"{student_id}-{student_name}-container"
+        image_name = f"{student_id}-{student_name}"
 
+        # config.json'dan exam türü ve dosya adı alınır
         config_path = "config.json"
-
         with open(config_path, "r", encoding="utf-8") as file:
             config = json.load(file)
 
-        file_name = config.get("file_name", "script").lower()#main
-        exam_type = config.get("type", "py").lower()#py
-        file_name += f".{exam_type}"  #main.py
+        base_file_name = config.get("file_name", "script").strip()
+        exam_type = config.get("type", "py").strip().lower()
+        file_name = f"{base_file_name}.{exam_type}"
 
-        folder_name = f"{student_id}_{student_name}"  #220717005_emre
+        folder_name = f"{student_id}_{student_name}"
         student_folder = os.path.abspath(os.path.join(UPLOADS_DIR, folder_name))
 
+        if not os.path.isdir(student_folder):
+            return JsonResponse({"status": "error", "message": "Student folder not found."})
 
-        # Check the existing container
-        check_status_command = f"docker ps -a -f name={container_name} --format '{{{{.State}}}}'"
-        container_status = os.popen(check_status_command).read().strip()
-
-       
         code_file_path = os.path.join(student_folder, file_name)
 
-        # if you want to add more languages, you can add them here with elif statements like below. 
-        docker_exec_command=""
-        if exam_type=="py":
-            docker_exec_command = f"docker exec {container_name} python /app/{file_name}"
-        elif exam_type=="java":
-            docker_exec_command = f"docker exec {container_name} javac /app/{file_name}.java && docker exec {container_name} java -cp /app {file_name}"
-        elif exam_type=="c":
-            docker_exec_command = f"docker exec {container_name} gcc /app/{file_name}.c -o /app/{file_name} && docker exec {container_name}- /app/{file_name}"
+        if not os.path.isfile(code_file_path):
+            return JsonResponse({"status": "error", "message": f"{file_name} not found in student folder."})
 
+        # Docker içine dosyayı kopyala
         copy_command = f"docker cp {code_file_path} {container_name}:/app/{file_name}"
         os.system(copy_command)
-        try:
-                result = subprocess.run(
-                    docker_exec_command,
-                    shell=True,
-                    capture_output=True,
-                    text=True
-                )
 
-                # Check if the command was successful
-                if result.returncode == 0:
-                  
-                    return JsonResponse({"status": "success", "output": result.stdout})
-                else:
-                    print(f"Error executing script in container for {container_name}:")
-                    print(result.stderr)  # This contains any error messages
-                    return JsonResponse({"status": "error", "output": result.stderr})
+        # Exam türüne göre çalıştırma komutu oluştur
+        docker_exec_command = ""
+        if exam_type == "py":
+            docker_exec_command = f"docker exec {container_name} python /app/{file_name}"
+        elif exam_type == "java":
+            docker_exec_command = f"docker exec {container_name} javac /app/{file_name} && docker exec {container_name} java -cp /app {base_file_name}"
+        elif exam_type == "c":
+            docker_exec_command = f"docker exec {container_name} gcc /app/{file_name} -o /app/{base_file_name} && docker exec {container_name} /app/{base_file_name}"
+        else:
+            return JsonResponse({"status": "error", "message": f"Unsupported exam type: {exam_type}"})
 
+        # Docker komutunu çalıştır
+        result = subprocess.run(
+            docker_exec_command,
+            shell=True,
+            capture_output=True,
+            text=True
+        )
 
-        
+        if result.returncode == 0:
+            return JsonResponse({"status": "success", "output": result.stdout})
+        else:
+            return JsonResponse({"status": "error", "output": result.stderr})
 
-        except Exception as e:
-            print(f"An error occurred while executing the script for {container_name}: {str(e)}")
-            return JsonResponse({"status": "error", "output": str(e)})
-
-        #terminal_output = os.popen(run_command).read().strip()
-        
-       # if "Traceback" in terminal_output or "Error" in terminal_output or "Exception" in terminal_output:
-        
     except json.JSONDecodeError:
-        return JsonResponse({"status": "error", "message": "Geçersiz JSON formatı."})
+        return JsonResponse({"status": "error", "message": "Invalid JSON format."})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": f"Unexpected error: {str(e)}"})
 
 
 def delete_docker(request):
@@ -273,18 +247,11 @@ def delete_docker(request):
         return JsonResponse({'status': 'error', 'message': str(e)})
 
 
-def get_config(request):
-    config_path = os.path.join("config.json")
-    if os.path.exists(config_path):
-        with open(config_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-            return JsonResponse(data)
-    return JsonResponse({"error": "Config file not found"}, status=404)
-    
+def list_assignment_files(request):
+    assignment_dir = os.path.join(settings.BASE_DIR, 'media', 'assignment_files')
 
-def get_file_content(request):
-    filename = request.GET.get('filename')
-    file_path = os.path.join('media', 'assignment_files', filename)
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    return JsonResponse({'content': content})
+    if not os.path.exists(assignment_dir):
+        return JsonResponse({'files': []})
+
+    files = [f for f in os.listdir(assignment_dir) if os.path.isfile(os.path.join(assignment_dir, f))]
+    return JsonResponse({'files': files})
