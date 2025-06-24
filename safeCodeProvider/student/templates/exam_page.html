@@ -1,118 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="/static/student/exam_page.css">
-  <meta name="csrf-token" content="{{ csrf_token }}">
-  <title>Exam Page</title>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/student/exam_page.css">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Exam Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        }
 
-}
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-body {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
+        .navbar {
+            width: 100%;
+            background-color: #181d24;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+        }
 
-.navbar {
-    width: 100%;
-    background-color: #181d24;
-    color: white;
-    text-align: center;
-    padding: 15px 0;
-}
+        .container {
+            display: flex;
+            width: 100%;
+            flex: 1;
+        }
 
-.container {
-    display: flex;
-    width: 100%;
-    flex: 1;
-}
+        .instruction {
+            width: 33%;
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
 
-.instruction {
-    width: 33%;
-    background-color: #f8f8f8;
-    padding: 20px;}
+        .instruction-content {
+            padding: 10px;
+        }
 
-.instruction-content {
-    padding: 10px;
-}
+        .right-panel {
+            width: 67%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
 
-.right-panel {
-    width: 67%;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
+        .editor {
+            height: 500px;
+            position: relative;
+            background-color: #1e1e1e;
+            color: white;
+        }
 
-.editor {
-    height: 500px;
-    position: relative;
-    background-color: #1e1e1e;
-    color: white;
-}
+        #monaco-editor {
+            width: 100%;
+            height: 500px;
+        }
 
-#monaco-editor {
-    width: 100%;
-    height: 500px;
-}
+        #toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            z-index: 10;
+            width: 60px;
+            font-size: 16px;
+        }
 
-#toggle-btn {
-    position: absolute;
-    top: 10px;
-    right: 30px;
-    z-index: 10;
-    width: 60px;
-    font-size: 16px;
-}
+        #output {
+            height: 250px;
+            background-color: #1e1e1e;
+            color: white;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
 
-#output {
-    height: 250px;
-    background-color: #1e1e1e;
-    color: white;
-    padding: 15px;
-    margin-top: 10px;
-    max-height: 250px;
-    overflow-y: auto;
-}
+        .buttons {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
 
-.buttons {
-    display: flex;
-    gap: 30px;
-    margin-top: 10px;
-    justify-content: flex-end;
-}
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #ff4d00;
+            color: white;
+            cursor: pointer;
+            padding: 12px;
+            width: 100px;
+            font-size: 14px;
+            border-radius: 5px;
+        }
 
-button {
-    padding: 10px 15px;
-    border: none;
-    background-color:#ff4d00;
-    color: white;
-    cursor: pointer;
-    padding: 12px;
-    width: 100px;
-    font-size: 14px;
-    border-radius: 5px;
-}
+        button:hover {
+            background-color: #a83200;
+        }
 
-button:hover {
-    background-color: #a83200;
-}
+        footer {
+            width: 100%;
+            text-align: center;
+            background-color: #181d24;
+            color: white;
+            padding: 10px 0;
+        }
 
-footer {
-    width: 100%;
-    text-align: center;
-    background-color: #181d24;
-    color: white;
-    padding: 10px 0;
-}
         /* Arka plan overlay */
         #overlay {
             display: none;
@@ -160,9 +162,15 @@ footer {
             background-color: red;
             color: white;
         }
+        #file-buttons-container{
+            display: flex;
+        
 
-
-  </style>
+        }
+        .file-btn{
+            width: 200px;
+        }
+    </style>
 </head>
 
 <body>
@@ -175,22 +183,24 @@ footer {
     </div>
 
     <div class="container">
-        <!-- Sol tarafta PDF slaytlarını gösterecek alan -->
+        <!-- Space to display PDF slides on the left -->
         <div class="instruction" style="overflow-y:hidden ;">
             <div style="display: flex; flex-direction: row; justify-content: space-between; justify-items: center;">
-                <h3>Exam Instructions</h3> 
+                <h3>Exam Instructions</h3>
                 <button id="fullscreenBtn">ZOOM PDF</button>
             </div>
             <div style="margin-top: 10px;" class="instruction-content" id="pdf-container">
                 <iframe id="pdf-frame" style="width: 100%; height: 700px; border: none;"></iframe>
             </div>
         </div>
-
-        <!-- Sağ tarafta kod editörü ve çıktı alanı -->
+        
+        <!-- Code editor and output area on the right -->
         <div class="right-panel">
+            <div style="margin-bottom: 10px; gap: 5px;" class="file-buttons" id="file-buttons-container"></div>
             <div class="editor" id="editor-container">
                 <div id="monaco-editor"></div>
-                <button id="toggle-btn" style="background-color: #1e1e1e; color: #ff4d00; font-weight: 700; font-size: 20px; border: 1px solid #ff4d00;border-radius: 5px;">⤢</button>
+                <button id="toggle-btn"
+                    style="background-color: #1e1e1e; color: #ff4d00; font-weight: 700; font-size: 20px; border: 1px solid #ff4d00;border-radius: 5px;">⤢</button>
             </div>
 
             <div id="output">Output will be displayed here...</div>
@@ -204,283 +214,384 @@ footer {
 
     <footer>
         <p>CommonCodeBase</p>
-    </footer>  
+    </footer>
 
 
-    <!-- Arka plan overlay -->
+    <!-- Background overlay -->
     <div id="overlay" onclick="RUSurno()"></div>
 
-  <div id="rusure" style="display: none;">
-    <h2>Are You sure to submit?</h2>
-      <button id="rusyesbutton" onclick="submitCode()">YES</button>
-      <button id="rusnobutton" onclick="RUSurno()">NO</button>
-  </div>
+    <div id="rusure" style="display: none;">
+        <h2>Are You sure to submit?</h2>
+        <button id="rusyesbutton" onclick="submitCode()">YES</button>
+        <button id="rusnobutton" onclick="RUSurno()">NO</button>
+    </div>
 
 
-  <script>
-    window.addEventListener("beforeunload", function (event) {
-        event.preventDefault(); 
-        event.returnValue = "Are you sure you want to leave? Your progress may be lost.";
-    });
-    
-    window.addEventListener("popstate", function (event) {
-        event.preventDefault(); 
-        RUSure(); 
-    });
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // localStorage'dan öğrenci ID ve ismini çek
-      const studentId = localStorage.getItem("student_id");
-      const studentName = localStorage.getItem("student_name");
-  
-      // Eğer bilgiler varsa, <span> elemanlarına yazdır
-      if (studentId && studentName) {
-          document.getElementById('user_id').textContent = studentId;
-          document.getElementById('user_name').textContent = studentName;
-      } else {
-          console.log("No student information found in localStorage.");
-      }
-  });
-  </script>
-  <script>
-  document.getElementById("fullscreenBtn").addEventListener("click", function() {
-    var iframe = document.getElementById("pdf-frame");
+    <script>
+        window.addEventListener("beforeunload", function (event) {
+            event.preventDefault();
+            event.returnValue = "Are you sure you want to leave? Your progress may be lost.";
+        });
 
-    if (document.fullscreenElement) {
-        document.exitFullscreen(); 
-    } else {
-        if (iframe.requestFullscreen) {
-            iframe.requestFullscreen();
-        } else if (iframe.mozRequestFullScreen) { 
-            iframe.mozRequestFullScreen();
-        } else if (iframe.webkitRequestFullscreen) { 
-            iframe.webkitRequestFullscreen();
-        } else if (iframe.msRequestFullscreen) { 
-            iframe.msRequestFullscreen();
-        }
-    }
-});
-</script>
+        window.addEventListener("popstate", function (event) {
+            event.preventDefault();
+            RUSure();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const studentId = localStorage.getItem("student_id");
+            const studentName = localStorage.getItem("student_name");
+
+            if (studentId && studentName) {
+                document.getElementById('user_id').textContent = studentId;
+                document.getElementById('user_name').textContent = studentName;
+            } else {
+                console.log("No student information found in localStorage.");
+            }
+        });
+    </script>
+
+
 
 <script>
-document.addEventListener("keydown", function(event) {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-        event.preventDefault(); 
+    function loadFileContent(fileName) {
+        fetch(`/get_file_content/?filename=${encodeURIComponent(fileName)}`)
+            .then(response => response.json()) 
+            .then(data => {
+                const content = data.content;   
+                editor.setValue(content);      
+            })
+            .catch(error => {
+                console.error("Failed to retrieve file content:", error);
+            });
     }
+</script>
+
+    <script>
+        document.getElementById("fullscreenBtn").addEventListener("click", function () {
+            var iframe = document.getElementById("pdf-frame");
+
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                if (iframe.requestFullscreen) {
+                    iframe.requestFullscreen();
+                } else if (iframe.mozRequestFullScreen) {
+                    iframe.mozRequestFullScreen();
+                } else if (iframe.webkitRequestFullscreen) {
+                    iframe.webkitRequestFullscreen();
+                } else if (iframe.msRequestFullscreen) {
+                    iframe.msRequestFullscreen();
+                }
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("keydown", function (event) {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+                event.preventDefault();
+            }
+        });
+    </script>
+
+    <script>
+        var pdfUrl = '{{ pdf_url }}';
+        if (pdfUrl) {
+            document.getElementById('pdf-frame').src = pdfUrl;
+        } else {
+            console.error("PDF URL not found.");
+        }
+    </script>
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.min.js"></script>
+<script>
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' } });
+
+let editor;
+let isFullscreen = false;
+let modelMap = {}; // All file models are kept here (filename -> model)
+let currentFile = null; // The file name currently open in the editor
+
+require(['vs/editor/editor.main'], function () {
+    const editorContainer = document.getElementById('editor-container');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const monacoContainer = document.getElementById('monaco-editor');
+    const fileButtonsContainer = document.getElementById('file-buttons-container');
+
+    // Editor oluşturuluyor
+    editor = monaco.editor.create(monacoContainer, {
+        value: "// Dosya içeriği burada gösterilecek",
+        language: "plaintext",
+        theme: "vs-dark",
+        fontSize: 16
+    });
+
+    // Tam ekran modunu aç/kapat
+    toggleBtn.addEventListener('click', function () {
+        if (!isFullscreen) {
+            editorContainer.style.position = "fixed";
+            editorContainer.style.top = "0";
+            editorContainer.style.left = "0";
+            editorContainer.style.right = "0";
+            editorContainer.style.width = "100vw";
+            editorContainer.style.height = "100vh";
+            editorContainer.style.zIndex = "9999";
+            toggleBtn.textContent = "⤡";
+        } else {
+            editorContainer.style = "";
+            editorContainer.style.width = "100%";
+            editorContainer.style.height = "500px";
+            toggleBtn.textContent = "⤢";
+        }
+        isFullscreen = !isFullscreen;
+        setTimeout(() => editor.layout(), 0);
+    });
+
+    // Dosya dili tespiti
+    function detectLang(fileName) {
+        if (fileName.endsWith(".py")) return "python";
+        if (fileName.endsWith(".java")) return "java";
+        if (fileName.endsWith(".c")) return "c";
+        if (fileName.endsWith(".cpp")) return "cpp";
+        if (fileName.endsWith(".js")) return "javascript";
+        return "plaintext";
+    }
+
+    // Dosya düğmesi oluşturucu
+    function createFileButton(fileName, model) {
+        const button = document.createElement("button");
+        button.className = "file-button";
+        button.textContent = fileName;
+
+        // Buton stili
+        Object.assign(button.style, {
+            padding: "8px 16px",
+            backgroundColor: "#2e3440",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "14px",
+            marginRight: "8px",
+            cursor: "pointer",
+            transition: "background-color 0.2s ease"
+        });
+
+        // Hover efekti
+        button.addEventListener("mouseover", () => {
+            if (editor.getModel() !== model) {
+                button.style.backgroundColor = "#4c566a";
+            }
+        });
+        button.addEventListener("mouseout", () => {
+            if (editor.getModel() !== model) {
+                button.style.backgroundColor = "#2e3440";
+            }
+        });
+
+        // Dosya seçildiğinde editörde aç
+        button.addEventListener("click", () => {
+            editor.setModel(model);
+            currentFile = fileName;
+
+            // Aktif dosya düğmesini vurgula
+            document.querySelectorAll(".file-button").forEach(btn => {
+                btn.style.backgroundColor = "#2e3440";
+                btn.style.color = "#ffffff";
+            });
+            button.style.backgroundColor = "#5eead4";
+            button.style.color = "#000000";
+        });
+
+        fileButtonsContainer.appendChild(button);
+    }
+
+    // Tüm dosyaları çek ve editor modellerini hazırla
+    fetch("/list_assignment_files/")
+        .then(res => res.json())
+        .then(data => {
+            const files = data.files || [];
+
+            files.forEach(fileName => {
+                fetch(`/media/assignment_files/${fileName}`)
+                    .then(res => res.text())
+                    .then(code => {
+                        const lang = detectLang(fileName);
+                        const model = monaco.editor.createModel(code, lang);
+                        modelMap[fileName] = model;
+
+                        createFileButton(fileName, model);
+
+                        // İlk dosyayı otomatik olarak aç
+                        if (!currentFile) {
+                            editor.setModel(model);
+                            currentFile = fileName;
+                        }
+                    });
+            });
+        })
+        .catch(err => {
+            console.error("Error getting file list:", err);
+        });
 });
 </script>
 
-  <script>
-    var pdfUrl = '{{ pdf_url }}';
-    if (pdfUrl) {
-        document.getElementById('pdf-frame').src = pdfUrl;
-    } else {
-        console.error("PDF URL bulunamadı.");
-    }
-</script>
-  
-  <!-- Monaco Editor CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.js"></script>
-  <script>
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' } });
 
-    var editor;
-    var isFullscreen = false;
+    <script>
 
-    require(['vs/editor/editor.main'], function() {
-        var langMap = {
-            'py': 'python',
-            'java': 'java',
-            'c': 'c'
-        };
-        var editorLanguage = langMap['{{ exam_type }}'] || 'plaintext';
+        function saveCode() {
+            let student_id = localStorage.getItem("student_id");
+            let student_name = localStorage.getItem("student_name");
 
-        var editorContainer = document.getElementById('editor-container');
-        var toggleBtn = document.getElementById('toggle-btn');
-
-        // **Orijinal boyutları kaydet**
-        var initialWidth = "100%";
-        var initialHeight = "500px";
-
-        editorContainer.style.width = initialWidth;
-        editorContainer.style.height = initialHeight;
-
-        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-            value: `{{ assignment_content|escapejs }}`,
-            language: editorLanguage,
-            theme: "vs-dark"
-        });
-
-        toggleBtn.addEventListener('click', function() {
-            if (!isFullscreen) {
-                // **Tam ekran modu**
-                editorContainer.style.position = "fixed";
-                editorContainer.style.top = "0";
-                editorContainer.style.left = "0";
-                editorContainer.style.right = "0";
-                editorContainer.style.width = "100vw";
-                editorContainer.style.height = "100vh";
-                editorContainer.style.zIndex = "9999";
-                toggleBtn.textContent = "⤡";
-            } else {
-                // **Başlangıç boyutlarına dön**
-                editorContainer.style.position = "";
-                editorContainer.style.top = "";
-                editorContainer.style.left = "";
-                editorContainer.style.right = "";
-                editorContainer.style.width = initialWidth;
-                editorContainer.style.height = initialHeight;
-                editorContainer.style.zIndex = "";
-                toggleBtn.textContent = "⤢";
+            const files = {};
+            for (const [fileName, model] of Object.entries(modelMap)) {
+                files[fileName] = model.getValue();
             }
 
-            isFullscreen = !isFullscreen;
-            setTimeout(() => {
-                editor.layout();
-            }, 0);
-        });
-    });
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-      function saveCode() {
-        const code = editor.getValue();
-        let student_id = localStorage.getItem("student_id"); 
-        let student_name = localStorage.getItem("student_name"); 
-
-        console.log("student_id:", student_id);
-        console.log("student_name:", student_name);
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        fetch("/save_code/", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({
-                student_id: student_id, 
-                student_name: student_name, 
-                code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            if (data.status === "success") {
-                runCode(student_id, student_name);  
-            }
-        })
-        .catch(error => console.error("Kod kaydedilirken hata oluştu:", error));
-    }   
-    
-    function runCode(student_id, student_name) {
-        console.log(`Container çalıştırılıyor: ${student_id}-${student_name}-container`);
-        
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-        fetch("/run_code/", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({
-                student_id: student_id,
-                student_name: student_name
+            fetch("/save_code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    student_id,
+                    student_name,
+                    files
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            
-            console.log("Çalıştırma Sonucu:", data);
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    runCode(student_id, student_name);
+                } else {
+                    alert("Save error: " + data.message);
+                }
+            });
+}
 
-    let outputText = "";
 
-    try {
-        // JSON formatında olduğundan emin ol
-        const jsonData = typeof data === "string" ? JSON.parse(data) : data;
-        outputText = jsonData.output || "Kod çalıştırılırken hata oluştu.";
-    } catch (error) {
-        console.error("JSON dönüşüm hatası:", error);
-        outputText = "Çıktı alınamadı. Sunucu hatası!";
-    }
+        function runCode(student_id, student_name) {
+            console.log(`Container is running: ${student_id}-${student_name}-container`);
 
-    // Terminal çıktısını frontend'de göster
-    document.getElementById("output").innerText = outputText;
-        })
-        .catch(error => {
-            console.error("Kod çalıştırılırken hata oluştu:", error);
-            document.getElementById("output").innerText = "Sunucu hatası!";
-        });
-    }
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    function submitCode() {
-        const code = editor.getValue();
-        let student_id = localStorage.getItem("student_id"); 
-        let student_name = localStorage.getItem("student_name"); 
+            fetch("/run_code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    student_id: student_id,
+                    student_name: student_name
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
 
-        console.log("student_id:", student_id);
-        console.log("student_name:", student_name);
+                    console.log("running Result:", data);
 
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    let outputText = "";
 
-        fetch("/save_code/", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({
-                student_id: student_id, 
-                student_name: student_name, 
-                code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            if (data.status === "success") {
-                deleteDocker(student_id,student_name)
+                    try {
+                        // JSON formatında olduğundan emin ol
+                        const jsonData = typeof data === "string" ? JSON.parse(data) : data;
+                        outputText = jsonData.output || "An error occurred while running the code.";
+                    } catch (error) {
+                        console.error("JSON conversion error:", error);
+                        outputText = "Could not print out. Server error!";
+                    }
+
+                    // Terminal çıktısını frontend'de göster
+                    document.getElementById("output").innerText = outputText;
+                })
+                .catch(error => {
+                    console.error("An error occurred while running the code:", error);
+                    document.getElementById("output").innerText = "Server error!";
+                });
+        }
+
+        function submitCode() {
+            let student_id = localStorage.getItem("student_id");
+            let student_name = localStorage.getItem("student_name");
+
+            console.log("student_id:", student_id);
+            console.log("student_name:", student_name);
+
+            const files = {};
+            for (const [fileName, model] of Object.entries(modelMap)) {
+                files[fileName] = model.getValue();
             }
-        })
-        .catch(error => console.error("Kod kaydedilirken hata oluştu:", error));
-    }
 
-    function deleteDocker(student_id,student_name) { 
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            fetch("/save_code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    student_id: student_id,
+                    student_name: student_name,
+                    files: files
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.status === "success") {
+                        alert("Your exam has been recorded.")
+                        deleteDocker(student_id, student_name)
+                    }
+                })
+                .catch(error => console.error("An error occurred while saving the code:", error));
+        }
 
-        fetch("/delete_docker/", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({
-                student_id: student_id, 
-                student_name: student_name})
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            if (data.status === "success") {
-                alert("game over.")
-            }
-            document.getElementById("overlay").style.display = "none";
-            document.getElementById("rusure").style.display = "none";
-        })
-        .catch(error => console.error("Kod kaydedilirken hata oluştu:", error));
-    }
+        function deleteDocker(student_id, student_name) {
 
-    function RUSure() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch("/delete_docker/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    student_id: student_id,
+                    student_name: student_name
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.status === "success") {
+                        console.log("Docker container deleted successfully.");
+                        window.location.href = "/";
+                    }
+                    document.getElementById("overlay").style.display = "none";
+                    document.getElementById("rusure").style.display = "none";
+                })
+                .catch(error => console.error("An error occurred while deletin docker container:", error));
+        }
+
+        function RUSure() {
             document.getElementById("overlay").style.display = "block";
             document.getElementById("rusure").style.display = "block";
         }
 
-    function RUSurno() {
-        document.getElementById("overlay").style.display = "none";
-        document.getElementById("rusure").style.display = "none";
-    }
+        function RUSurno() {
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("rusure").style.display = "none";
+        }
 
-  </script>
+    </script>
 </body>
+
 </html>

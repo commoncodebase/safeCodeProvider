@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/static/teacher/teacher_home.css">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-          <title>Teacher Panel</title>
+    <title>Teacher Panel</title>
 </head>
+
 <body>
     <div class="navbar">
-    <h2 style="text-align: center; font-family: Unbounded, serif;">Safe Code Provider | Teacher Panel</h2>
+        <h2 style="text-align: center; font-family: Unbounded, serif;">Safe Code Provider | Teacher Panel</h2>
     </div>
     <div class="upload-container">
         <!-- Student List Upload -->
-        <div class="upload-box" id="student_list_box" ondrop="handleDrop(event, 'student_list')" ondragover="allowDrop(event)">
+        <div class="upload-box" id="student_list_box" ondrop="handleDrop(event, 'student_list')"
+            ondragover="allowDrop(event)">
             <h3>Add Student List</h3>
             <label for="student_list" class="custom-file-label" style="color:#ff4d00;">
                 <i class="fa-solid fa-upload"></i> Drag & Drop or Click
@@ -22,9 +25,10 @@
             <input type="file" id="student_list" class="file-input" accept=".csv" onchange="updateFileName(this)" />
             <div id="student_list_name" class="file-name">No file chosen</div>
         </div>
-    
+
         <!-- Exam Instruction Upload -->
-        <div class="upload-box" id="exam_instruction_box" ondrop="handleDrop(event, 'exam_instruction')" ondragover="allowDrop(event)">
+        <div class="upload-box" id="exam_instruction_box" ondrop="handleDrop(event, 'exam_instruction')"
+            ondragover="allowDrop(event)">
             <h3>Add Exam Instruction</h3>
             <label for="exam_instruction" class="custom-file-label" style="color:#ff4d00;">
                 <i class="fa-solid fa-upload"></i> Drag & Drop or Click
@@ -32,19 +36,25 @@
             <input type="file" id="exam_instruction" class="file-input" accept=".pdf" onchange="updateFileName(this)" />
             <div id="exam_instruction_name" class="file-name">No file chosen</div>
         </div>
-    
+
         <!-- Assignment File Upload -->
-        <div class="upload-box" id="assignment_file_box" ondrop="handleDrop(event, 'assignment_file')" ondragover="allowDrop(event)">
+        <div class="upload-box" id="assignment_file_box" ondrop="handleDrop(event)" ondragover="allowDrop(event)">
             <h3>Add Assignment File</h3>
             <label for="assignment_file" class="custom-file-label" style="color:#ff4d00;">
                 <i class="fa-solid fa-upload"></i> Drag & Drop or Click
             </label>
-            <input type="file" id="assignment_file" class="file-input" accept=".py,.java,.c" onchange="updateFileName(this)" />
-            <div id="assignment_file_name" class="file-name">No file chosen</div>
+            <input type="file" id="assignment_file" class="file-input" accept=".py,.java,.c" multiple
+                onchange="handleFiles(this.files)" />
+            <div id="file_list" class="file-list">
+                <!-- Yüklenen dosya isimleri burada listelenecek -->
+            </div>
         </div>
+
+
+
     </div>
-    
-    
+
+
     <br><br>
 
     <div class="form-container" style="color: #000; font-weight: 700;">
@@ -52,25 +62,25 @@
             <label for="exam_time">Time:</label>
             <input style="height: 50px;" type="text" id="exam_time">
         </div>
-    
+
         <div class="form-control">
             <label for="exam_name">Exam Name:</label>
             <input style="height: 50px;" type="text" id="exam_name">
         </div>
-    
- 
-        <button style = "margin-bottom:100px" onclick="startExam()">Start Assignment</button>
+
+
+        <button style="margin-bottom:100px" onclick="startExam()">Start Assignment</button>
     </div>
 
 
     <div id="loading_popup" class="loading-popup">
         <div class="loading-popup-content">
-            <p  id="loading_text">Exam is creating...</p>
+            <p id="loading_text">Exam is creating...</p>
             <div class="loading-spinner"></div>
         </div>
     </div>
 
-    <div id="success_message" class="success-message" >
+    <div id="success_message" class="success-message">
         <p style="margin-top: 400px;">Exam created successfully!</p>
         <button id="create_exam_btn" onclick="goToSubmit()">Go To Submits Page</button>
     </div>
@@ -81,6 +91,32 @@
     </footer>
 
     <script>
+        const uploadedFiles = [];
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                uploadedFiles.push(files[i]);
+                displayFile(files[i].name);
+            }
+        }
+
+        function displayFile(fileName) {
+            const fileList = document.getElementById('file_list');
+            const fileItem = document.createElement('div');
+            fileItem.textContent = fileName;
+            fileList.appendChild(fileItem);
+        }
+
         function updateFileName(input) {
             const fileNameDiv = document.getElementById(input.id + "_name");
             fileNameDiv.textContent = input.files.length > 0 ? input.files[0].name : "No file chosen";
@@ -97,54 +133,54 @@
                 fileInput.files = event.dataTransfer.files;
                 updateFileName(fileInput);
             }
-        }     
-        
+        }
+
         function goToSubmit() {
             window.location.href = "/submits/";
         }
 
         function startExam() {
-                // Show loading popup
+            // Show loading popup
             document.getElementById("loading_popup").style.display = "flex";
             document.getElementById("success_message").style.display = "none"; // Hide success message initially
-    
-                 // 15 seconds for the loading spinner
-            setTimeout(function() {
-                // Hide loading popup
-                document.getElementById("loading_popup").style.display = "none";
-
-                // Show success message and button
-                document.getElementById("success_message").style.display = "block";
-            }, 15000); // 15000ms (15 seconds)
-
+            
 
             let time = document.getElementById("exam_time").value;
             let exam_name = document.getElementById("exam_name").value;
             let studentList = document.getElementById("student_list").files[0];
             let examInstruction = document.getElementById("exam_instruction").files[0];
-            let assignmentFile = document.getElementById("assignment_file").files[0];
 
-            if (!exam_name || !time || !studentList || !examInstruction || !assignmentFile) {
+            if (!exam_name || !time || !studentList || !examInstruction) {
                 alert("Please fill in all fields and upload all files.");
                 return;
             }
 
-            
+
             let chars = "0123456789";
             let password = "";
             for (let i = 0; i < 6; i++) {
                 password += chars.charAt(Math.floor(Math.random() * chars.length));
             }
-            
+
+
+            console.log("assignment filellar:",uploadedFiles)
             let formData = new FormData();
             formData.append("time", time);
             formData.append("exam_name", exam_name);
             formData.append("exam_password", password);
             formData.append("student_list", studentList);
             formData.append("exam_instruction", examInstruction);
-            formData.append("assignment_file", assignmentFile);
+
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                formData.append("assignment_files", uploadedFiles[i]);
+            } 
+            
             let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+            console.log("FormData content to be sent:");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ':', pair[1]);
+            }
             fetch('/start_exam/', {
                 method: 'POST',
                 body: formData,
@@ -152,12 +188,31 @@
                     "X-CSRFToken": csrfToken
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-            })
-            .catch(error => console.error(error));
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            console.error(err);
+                            alert(err.error); 
+                            throw new Error(err.error); 
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // If successful, close loading popup
+                    document.getElementById("loading_popup").style.display = "none";
+
+                    document.getElementById("success_message").style.display = "block";
+                })
+                .catch(error => {
+                    console.error(error)
+                    document.getElementById("loading_popup").style.display = "none"; 
+                });
+
+                
         }
 
     </script>
 </body>
+
 </html>
