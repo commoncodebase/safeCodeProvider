@@ -143,16 +143,7 @@
             // Show loading popup
             document.getElementById("loading_popup").style.display = "flex";
             document.getElementById("success_message").style.display = "none"; // Hide success message initially
-
-            // 15 seconds for the loading spinner
-            setTimeout(function () {
-                // Hide loading popup
-                document.getElementById("loading_popup").style.display = "none";
-
-                // Show success message and button
-                document.getElementById("success_message").style.display = "block";
-            }, 15000); // 15000ms (15 seconds)
-
+            
 
             let time = document.getElementById("exam_time").value;
             let exam_name = document.getElementById("exam_name").value;
@@ -180,13 +171,13 @@
             formData.append("student_list", studentList);
             formData.append("exam_instruction", examInstruction);
 
-            // Tüm dosyaları FormData'ya ekle
             for (let i = 0; i < uploadedFiles.length; i++) {
                 formData.append("assignment_files", uploadedFiles[i]);
-            } let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            } 
+            
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            // ✅ FormData içeriğini konsolda görüntüle
-            console.log("Gönderilecek FormData içeriği:");
+            console.log("FormData content to be sent:");
             for (let pair of formData.entries()) {
                 console.log(pair[0] + ':', pair[1]);
             }
@@ -201,15 +192,22 @@
                     if (!response.ok) {
                         return response.json().then(err => {
                             console.error(err);
-                            alert(err.error); // İstersen popup yerine ekrana mesaj gösterebilirsin
-                            throw new Error(err.error); // Akışı durdurmak için
+                            alert(err.error); 
+                            throw new Error(err.error); 
                         });
                     }
                     return response.json();
                 })
                 .then(data => {
+                    // If successful, close loading popup
+                    document.getElementById("loading_popup").style.display = "none";
+
+                    document.getElementById("success_message").style.display = "block";
                 })
-                .catch(error => console.error(error));
+                .catch(error => {
+                    console.error(error)
+                    document.getElementById("loading_popup").style.display = "none"; 
+                });
 
                 
         }

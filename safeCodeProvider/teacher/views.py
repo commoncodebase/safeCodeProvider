@@ -9,6 +9,7 @@ import shutil
 import ctypes
 import sys
 import platform
+import unicodedata
 
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
@@ -77,7 +78,7 @@ def start_exam(request):
 
             student_list = request.FILES.get("student_list")
             exam_instruction = request.FILES.get("exam_instruction")
-            assignment_files = request.FILES.getlist("assignment_files")  # Çoklu dosya
+            assignment_files = request.FILES.getlist("assignment_files")  # multifile
 
             if not exam_name or not exam_time or not exam_password:
                 return JsonResponse({"error": "Incomplete exam information was sent."}, status=400)
@@ -95,7 +96,7 @@ def start_exam(request):
                 saved_name = save_uploaded_file(file, "assignment_files")
                 assignment_file_names.append(saved_name)
 
-            # En son yüklenen dosyadan türünü bul (örn: py, java)
+            # finding type of exam from the last file (örn: py, java)
             file_type = "unknown"
             file_name = "unknown"
 
@@ -106,7 +107,7 @@ def start_exam(request):
 
             java_main_file_found = False
 
-            if file_type == 'java': #main dosyasi var mi kontrolu
+            if file_type == 'java': # is main file exists?
                 for file in assignment_file_names:
                     name = file.split('.')[0].lower()
                     if name.lower() == 'main':
@@ -135,7 +136,7 @@ def start_exam(request):
                 "type": file_type,
                 "student_list": student_list_name,
                 "exam_instruction": exam_instruction_name,
-                "assignment_files": assignment_file_names  # Liste halinde ekleniyor
+                "assignment_files": assignment_file_names  # list
             })
 
             with open(config_path, "w", encoding="utf-8") as file:
@@ -144,9 +145,9 @@ def start_exam(request):
             return handle_docker_operations(config_path, request)
 
         except Exception as e:
-            return JsonResponse({"error": f"Sunucu hatası: {str(e)}"}, status=500)
+            return JsonResponse({"error": f"Server error : {str(e)}"}, status=500)
 
-    return JsonResponse({"error": "Geçersiz istek yöntemi"}, status=405)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
 def create_student_dockerfile(exam_type, file_name, dockerfile_path, folder_path):
     with open(dockerfile_path, "r") as file:
@@ -289,10 +290,10 @@ def handle_docker_operations(config_path, request):
         manage_containers(students)
         execute_commands_in_containers(students, exam_type, file_name)
 
-        return JsonResponse({"message": "Docker işlemleri başarıyla tamamlandı!"})
+        return JsonResponse({"message": "Docker operations completed successfully!"})
 
     except Exception as e:
-        return JsonResponse({"error": f"Docker işlemleri sırasında hata oluştu: {str(e)}"}, status=500)
+        return JsonResponse({"error": f"Error occurred during Docker processes: {str(e)}"}, status=500)
 
 
 
@@ -323,7 +324,8 @@ def bring_code(request):
     try:
         body = json.loads(request.body)
         student_id = body.get("student_id")
-        student_name = body.get('student_name').lower()
+        student_name = body.get("student_name")
+        student_name = convert_to_ascii(student_name).lower()
 
         folder_name = f"{student_id}_{student_name}"
         student_folder = os.path.join(UPLOADS_DIR, folder_name)  # uploads/123_john
@@ -334,6 +336,9 @@ def bring_code(request):
         files_data = []
 
         for filename in os.listdir(student_folder):
+            if filename == "Dockerfile":
+                continue
+
             file_path = os.path.join(student_folder, filename)
             if os.path.isfile(file_path):
                 with open(file_path, "r", encoding="utf-8") as file:

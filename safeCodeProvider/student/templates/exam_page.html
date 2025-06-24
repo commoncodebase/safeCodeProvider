@@ -183,7 +183,7 @@
     </div>
 
     <div class="container">
-        <!-- Sol tarafta PDF slaytlarını gösterecek alan -->
+        <!-- Space to display PDF slides on the left -->
         <div class="instruction" style="overflow-y:hidden ;">
             <div style="display: flex; flex-direction: row; justify-content: space-between; justify-items: center;">
                 <h3>Exam Instructions</h3>
@@ -194,7 +194,7 @@
             </div>
         </div>
         
-        <!-- Sağ tarafta kod editörü ve çıktı alanı -->
+        <!-- Code editor and output area on the right -->
         <div class="right-panel">
             <div style="margin-bottom: 10px; gap: 5px;" class="file-buttons" id="file-buttons-container"></div>
             <div class="editor" id="editor-container">
@@ -217,7 +217,7 @@
     </footer>
 
 
-    <!-- Arka plan overlay -->
+    <!-- Background overlay -->
     <div id="overlay" onclick="RUSurno()"></div>
 
     <div id="rusure" style="display: none;">
@@ -240,11 +240,10 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // localStorage'dan öğrenci ID ve ismini çek
+            
             const studentId = localStorage.getItem("student_id");
             const studentName = localStorage.getItem("student_name");
 
-            // Eğer bilgiler varsa, <span> elemanlarına yazdır
             if (studentId && studentName) {
                 document.getElementById('user_id').textContent = studentId;
                 document.getElementById('user_name').textContent = studentName;
@@ -259,13 +258,13 @@
 <script>
     function loadFileContent(fileName) {
         fetch(`/get_file_content/?filename=${encodeURIComponent(fileName)}`)
-            .then(response => response.json()) // <-- Burayı değiştirdik
+            .then(response => response.json()) 
             .then(data => {
-                const content = data.content;   // JSON içinden "content" alanı
-                editor.setValue(content);       // Monaco editöre kodu yaz
+                const content = data.content;   
+                editor.setValue(content);      
             })
             .catch(error => {
-                console.error("Dosya içeriği alınamadı:", error);
+                console.error("Failed to retrieve file content:", error);
             });
     }
 </script>
@@ -303,7 +302,7 @@
         if (pdfUrl) {
             document.getElementById('pdf-frame').src = pdfUrl;
         } else {
-            console.error("PDF URL bulunamadı.");
+            console.error("PDF URL not found.");
         }
     </script>
 
@@ -313,8 +312,8 @@ require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-e
 
 let editor;
 let isFullscreen = false;
-let modelMap = {}; // Tüm dosya modelleri burada tutulur (filename -> model)
-let currentFile = null; // Şu an editörde açık olan dosya adı
+let modelMap = {}; // All file models are kept here (filename -> model)
+let currentFile = null; // The file name currently open in the editor
 
 require(['vs/editor/editor.main'], function () {
     const editorContainer = document.getElementById('editor-container');
@@ -434,49 +433,50 @@ require(['vs/editor/editor.main'], function () {
             });
         })
         .catch(err => {
-            console.error("Dosya listesi alınırken hata:", err);
+            console.error("Error getting file list:", err);
         });
 });
 </script>
 
 
     <script>
+
         function saveCode() {
-    let student_id = localStorage.getItem("student_id");
-    let student_name = localStorage.getItem("student_name");
+            let student_id = localStorage.getItem("student_id");
+            let student_name = localStorage.getItem("student_name");
 
-    const files = {};
-    for (const [fileName, model] of Object.entries(modelMap)) {
-        files[fileName] = model.getValue();
-    }
+            const files = {};
+            for (const [fileName, model] of Object.entries(modelMap)) {
+                files[fileName] = model.getValue();
+            }
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch("/save_code/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify({
-            student_id,
-            student_name,
-            files
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            runCode(student_id, student_name);
-        } else {
-            alert("Kaydetme hatası: " + data.message);
-        }
-    });
+            fetch("/save_code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    student_id,
+                    student_name,
+                    files
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    runCode(student_id, student_name);
+                } else {
+                    alert("Save error: " + data.message);
+                }
+            });
 }
 
 
         function runCode(student_id, student_name) {
-            console.log(`Container çalıştırılıyor: ${student_id}-${student_name}-container`);
+            console.log(`Container is running: ${student_id}-${student_name}-container`);
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -494,35 +494,39 @@ require(['vs/editor/editor.main'], function () {
                 .then(response => response.json())
                 .then(data => {
 
-                    console.log("Çalıştırma Sonucu:", data);
+                    console.log("running Result:", data);
 
                     let outputText = "";
 
                     try {
                         // JSON formatında olduğundan emin ol
                         const jsonData = typeof data === "string" ? JSON.parse(data) : data;
-                        outputText = jsonData.output || "Kod çalıştırılırken hata oluştu.";
+                        outputText = jsonData.output || "An error occurred while running the code.";
                     } catch (error) {
-                        console.error("JSON dönüşüm hatası:", error);
-                        outputText = "Çıktı alınamadı. Sunucu hatası!";
+                        console.error("JSON conversion error:", error);
+                        outputText = "Could not print out. Server error!";
                     }
 
                     // Terminal çıktısını frontend'de göster
                     document.getElementById("output").innerText = outputText;
                 })
                 .catch(error => {
-                    console.error("Kod çalıştırılırken hata oluştu:", error);
-                    document.getElementById("output").innerText = "Sunucu hatası!";
+                    console.error("An error occurred while running the code:", error);
+                    document.getElementById("output").innerText = "Server error!";
                 });
         }
 
         function submitCode() {
-            const code = editor.getValue();
             let student_id = localStorage.getItem("student_id");
             let student_name = localStorage.getItem("student_name");
 
             console.log("student_id:", student_id);
             console.log("student_name:", student_name);
+
+            const files = {};
+            for (const [fileName, model] of Object.entries(modelMap)) {
+                files[fileName] = model.getValue();
+            }
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -535,17 +539,18 @@ require(['vs/editor/editor.main'], function () {
                 body: JSON.stringify({
                     student_id: student_id,
                     student_name: student_name,
-                    code: code
+                    files: files
                 })
             })
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
                     if (data.status === "success") {
+                        alert("Your exam has been recorded.")
                         deleteDocker(student_id, student_name)
                     }
                 })
-                .catch(error => console.error("Kod kaydedilirken hata oluştu:", error));
+                .catch(error => console.error("An error occurred while saving the code:", error));
         }
 
         function deleteDocker(student_id, student_name) {
@@ -567,12 +572,13 @@ require(['vs/editor/editor.main'], function () {
                 .then(data => {
                     console.log(data);
                     if (data.status === "success") {
-                        alert("game over.")
+                        console.log("Docker container deleted successfully.");
+                        window.location.href = "/";
                     }
                     document.getElementById("overlay").style.display = "none";
                     document.getElementById("rusure").style.display = "none";
                 })
-                .catch(error => console.error("Kod kaydedilirken hata oluştu:", error));
+                .catch(error => console.error("An error occurred while deletin docker container:", error));
         }
 
         function RUSure() {

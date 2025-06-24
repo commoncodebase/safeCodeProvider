@@ -186,7 +186,9 @@ def run_code(request):
             return JsonResponse({"status": "error", "message": f"{file_name} not found in student folder."})
 
         # Docker içine dosyayı kopyala
-        copy_command = f"docker cp {code_file_path} {container_name}:/app/{file_name}"
+        #copy_command = f"docker cp {code_file_path} {container_name}:/app/{file_name}"
+        copy_command = f"docker cp {student_folder}/. {container_name}:/app/"
+
         os.system(copy_command)
 
         # Exam türüne göre çalıştırma komutu oluştur
